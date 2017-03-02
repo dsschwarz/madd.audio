@@ -7,7 +7,7 @@
 int lastReset = 0; // time in millis when interval started
 double currentMaxDB = 0; // NOTE: this could also be stored in the array. Keeping it separate for now to be explicit
 int storedPastDB[STORED_PAST_DB];
-int index = 0; // the current record to write to
+int currentIndex = 0; // the current record to write to
 int numRecords = 0; // the number of records. Values above STORED_PAST_DB are meaningless
 
 
@@ -25,9 +25,7 @@ double stepper(int secondsElapsed) {
   }
 }
 
-double 
-
-void getInput() {
+double getInput() {
   int totalSecondsElapsed = (millis() - startTime) * timeAcceleration / 1000; // in seconds
 
   // call one of the test functions
@@ -59,9 +57,9 @@ void recordDB(double dB) {
   
   if (currentTime - lastReset > INTERVAL) {
     lastReset = currentTime;
-    storedPastDB[index] = (int)currentMaxDB;
+    storedPastDB[currentIndex] = (int)currentMaxDB;
     currentMaxDB = 0;
-    index = (index+1)%STORED_PAST_DB;
+    currentIndex = (currentIndex+1)%STORED_PAST_DB;
 
     if (numRecords < STORED_PAST_DB) {
       numRecords++;
