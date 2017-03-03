@@ -1,62 +1,74 @@
-#define STORED_PAST_DB 8 // The number of records to store (overwrites oldest record
-// these must be minimum 15dB apart (or based on the actual attenuation of the device) If they're too close, the device will be stuck in an open/shut loop
-#define UPPER_THRESHOLD 80 // db, when to close
-#define LOWER_THRESHOLD 65 // db, when to open
-#define INTERVAL 500 // interval time in millis
+// #define i/o pins
+#define MIC_IN 14 // Mic in is Pin 14
 
-int lastReset = 0; // time in millis when interval started
+const int STORED_PAST_DB = 8; // The number of records to store (overwrites oldest record)
+const int WINDOW = 500; // length of envelope window time in millis
+const int UPPER_THRESHOLD = 80; // db, when to close
+const int LOWER_THRESHOLD = 65; // db, when to open
+// these must be minimum 15dB apart (or based on the actual attenuation of the device) If they're too close, the device will be stuck in an open/shut loop
+const double vref = 1; // reference votage (for dB calculation)
+
+int lastResetTime = 0; // time in millis when WINDOW started
 double currentMaxDB = 0; // NOTE: this could also be stored in the array. Keeping it separate for now to be explicit
 int storedPastDB[STORED_PAST_DB];
 int currentIndex = 0; // the current record to write to
 int numRecords = 0; // the number of records. Values above STORED_PAST_DB are meaningless
-
-
 
 // for testing
 int startTime;
 int timeAcceleration = 3600; // 8 hours passes in 8 seconds
 int isClosed;
 
-double stepper(int secondsElapsed) {
-  if (secondsElapsed % 100) {
-    return 90; 
-  } else {
-    return 70;
+void setup() {
+  lastResetTime = millis();
+  Serial.print("Initializing with time stamp: ");
+  Serial.println(lastResetTime);
+
+  // for testing
+  startTime = lastResetTime;
+  isClosed = 0;
+}
+
+void loop() {
+  double dB = V_to_dB(getInput()); // TODO: implement fake getInput() for testing, otherwise hook up to the old getInput method.
+  Serial.println(dB);
+  recordDB(dB);
+
+  if (shouldOpen()) {
+    openDevice();
+  } else if (shouldClose()) {
+    closeDevice();
   }
 }
 
 double getInput() {
-  int totalSecondsElapsed = (millis() - startTime) * timeAcceleration / 1000; // in seconds
-
-  // call one of the test functions
-  double noiseLevel = stepper(totalSecondsElapsed);
-
-  if (isClosed) {
-    return noiseLevel - 15;
-  } else {
-    return noiseLevel;
-  }
+  return analogRead(MIC_IN);
+//  int totalSecondsElapsed = (millis() - startTime) * timeAcceleration / 1000; // in seconds
+//
+//  // call one of the test functions
+//  double noiseLevel = stepper(totalSecondsElapsed);
+//
+//  if (isClosed) {
+//    return noiseLevel - 15;
+//  } else {
+//    return noiseLevel;
+//  }  
 }
 
-void setup() {
-  lastReset = millis();
-  Serial.print("Initializing with time stamp: ");
-  Serial.println(lastReset);
-
-  // for testing
-  startTime = lastReset;
-  isClosed = 0;
+double V_to_dB(double vin) {
+  return 20 * log10(vin/vref);
 }
 
 void recordDB(double dB) {
   int currentTime = millis();
 
+  // Check if the current level is louder than the previous 
   if (dB > currentMaxDB) {
     currentMaxDB = dB;
   }
   
-  if (currentTime - lastReset > INTERVAL) {
-    lastReset = currentTime;
+  if ((currentTime - lastResetTime) > WINDOW) {
+    lastResetTime = currentTime;
     storedPastDB[currentIndex] = (int)currentMaxDB;
     currentMaxDB = 0;
     currentIndex = (currentIndex+1)%STORED_PAST_DB;
@@ -65,6 +77,8 @@ void recordDB(double dB) {
       numRecords++;
     }
   }
+
+  Serial.println(currentMaxDB);
 }
 
 
@@ -106,13 +120,11 @@ void closeDevice() {
   isClosed = 1;
 }
 
-void loop() {
-  double dB = getInput(); // TODO: implement fake getInput() for testing, otherwise hook up to the old getInput method.
-  recordDB(dB);
-
-  if (shouldOpen()) {
-    openDevice();
-  } else if (shouldClose()) {
-    closeDevice();
+double stepper(int secondsElapsed) {
+  if (secondsElapsed % 100) {
+    return 90; 
+  } else {
+    return 70;
   }
 }
+
