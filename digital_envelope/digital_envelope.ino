@@ -14,10 +14,24 @@ int storedPastDB[STORED_PAST_DB];
 int currentIndex = 0; // the current record to write to
 int numRecords = 0; // the number of records. Values above STORED_PAST_DB are meaningless
 
+// microphone calibration
+// TODO update these values for the new circuit
+const double p0 = 0.00002; // Pa8
+const double sensitivity = 6.31; //mV/Pa
+const double A_filt = 0.502; // A-filter gain
+//const double R1 = 9890; // Ohms
+const double R1 = 4658; // Ohms
+//const double R2 = 179500; //Ohms
+const double R2 = 1011000; //Ohms
+const double G = R2/R1; // Pre-amp gain
+const double S_total = p0*sensitivity*A_filt*G; //Overall Gain
+
+
 // for testing
 int startTime;
 int timeAcceleration = 3600; // 8 hours passes in 8 seconds
 int isClosed;
+
 
 void setup() {
   lastResetTime = millis();
@@ -31,6 +45,7 @@ void setup() {
 
 void loop() {
   double dB = V_to_dB(getInput()); // TODO: implement fake getInput() for testing, otherwise hook up to the old getInput method.
+  Serial.print("dB is: ");
   Serial.println(dB);
   recordDB(dB);
 
@@ -42,17 +57,30 @@ void loop() {
 }
 
 double getInput() {
-  return analogRead(MIC_IN);
-//  int totalSecondsElapsed = (millis() - startTime) * timeAcceleration / 1000; // in seconds
-//
-//  // call one of the test functions
-//  double noiseLevel = stepper(totalSecondsElapsed);
-//
-//  if (isClosed) {
-//    return noiseLevel - 15;
-//  } else {
-//    return noiseLevel;
-//  }  
+  
+  double mVin = analogRead(MIC_IN)*4.9; // TODO: why is this 4.9? maybe Adam knows
+  
+  if (mVin <= 0)
+    Serial.println("Invalid read!!");
+    Serial.print(mVin);
+  // Serial.print("... mVin - Voff: ");
+  // Serial.println(mVin);
+  double dB = (20*log10(mVin/(S_total)));
+//  dB = 100;
+  return dB;
+}
+
+double testGetInput() {
+  int totalSecondsElapsed = (millis() - startTime) * timeAcceleration / 1000; // in seconds
+
+  // call one of the test functions
+  double noiseLevel = stepper(totalSecondsElapsed);
+
+  if (isClosed) {
+    return noiseLevel - 15;
+  } else {
+    return noiseLevel;
+  }  
 }
 
 double V_to_dB(double vin) {
@@ -66,8 +94,11 @@ void recordDB(double dB) {
   if (dB > currentMaxDB) {
     currentMaxDB = dB;
   }
-  
+
+  Serial.print("Elapsed time: ");
+  Serial.println(currentTime - lastResetTime);
   if ((currentTime - lastResetTime) > WINDOW) {
+    Serial.println("##################### Next window #####################################");
     lastResetTime = currentTime;
     storedPastDB[currentIndex] = (int)currentMaxDB;
     currentMaxDB = 0;
@@ -78,7 +109,10 @@ void recordDB(double dB) {
     }
   }
 
+  Serial.print("Current max db: ");
   Serial.println(currentMaxDB);
+
+  delay(10);
 }
 
 
