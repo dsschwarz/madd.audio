@@ -1,8 +1,10 @@
 // #define i/o pins
-#define GND 14 // Ground reference pin (for calibration)
 #define MIC_IN 15 // Mic in Pin
-#define LEFT_BIT_1 1
-#define LEFT_BIT_3 3
+// Output Pins 
+#define LEFT_1 1
+#define LEFT_2 2
+#define RIGHT_1 3
+#define RIGHT_2 4
 
 const int STORED_PAST_DB = 8; // The number of records to store (overwrites oldest record)
 const int WINDOW = 500; // length of envelope window time in millis
@@ -56,7 +58,7 @@ void loop() {
   Serial.println(dB);
   recordDB(dB);
 
-  testHBridge();
+  testOutput();
 
 //  if (shouldOpen()) {
 //    openDevice();
@@ -89,7 +91,7 @@ double getTestInput() {
   return vin;
 }
 
-void testHBridge(){
+void testOutput(){
     Serial.println("Off");
     digitalWrite(LEFT_BIT_1, LOW);
     digitalWrite(LEFT_BIT_3, LOW);
