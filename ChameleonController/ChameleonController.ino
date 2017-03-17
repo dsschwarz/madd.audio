@@ -8,7 +8,7 @@
 const int WINDOW = 500; // length of envelope window time in millis
 const int STORED_PAST_DB = 10; // The number of records to store (overwrites oldest record). This gives us a 5s memory
 const int UPPER_THRESHOLD = 85; // db, when to close
-const int LOWER_THRESHOLD = 70; // db, when to open
+const int LOWER_THRESHOLD = 75; // db, when to open
 const int MAX_EXPOSURE = 85; // dB, Maximum daily exposure
 // these must be minimum 15dB apart (or based on the actual attenuation of the device) If they're too close, the device will be stuck in an open/shut loop
 const double vref = 1; // reference votage (for dB calculation)
@@ -76,6 +76,8 @@ void loop() {
       openDevice();
  }
 
+  // IDEA: Get the exposure rate over the memory period, and project that to 8hrs
+
   // Timekeeping - we don't expect drarstically over 8hrs uptime, so only keep track of hours
   if (millis()/1000 - secondsElapsed > 1) {
     secondsElapsed++;
@@ -121,10 +123,12 @@ void recordDB(double dB) {
   // If we've exceeded the window time frame
   // 
   if (elapsedTime >= WINDOW) {
-    // Serial.print("Max dB: ");
-    // Serial.println(currentMaxDB);
-    // Serial.print("Closed: ");
-    // Serial.print(isClosed);
+    Serial.print("Max dB: ");
+    Serial.println(currentMaxDB);
+    Serial.print("Closed: ");
+    Serial.println(isClosed);
+    Serial.print("Projected Exposure: ");
+    Serial.println(LeqLinearProjection());
     Serial.print("\n##################### Next window ####################################\n");
     lastResetTime = currentTime;
     storedPastDB[currentIndex] = (int)currentMaxDB;
