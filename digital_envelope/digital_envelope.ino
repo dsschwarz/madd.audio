@@ -17,13 +17,11 @@ int numRecords = 0; // the number of records. Values above STORED_PAST_DB are me
 // microphone calibration
 // TODO update these values for the new circuit
 const double p0 = 0.00002; // Pa8
-const double sensitivity = 6.31; //mV/Pa
+const double sensitivity = 2.24; //mV/Pa
 const double A_filt = 0.502; // A-filter gain
-//const double R1 = 9890; // Ohms
 const double R1 = 4658; // Ohms
-//const double R2 = 179500; //Ohms
-const double R2 = 1011000; //Ohms
-const double G = R2/R1; // Pre-amp gain
+const double R2 = 98600; //Ohms
+const double G = R2/R1; // Pre-amp gain. about 20x for this circuit
 const double S_total = p0*sensitivity*A_filt*G; //Overall Gain
 
 
@@ -58,13 +56,14 @@ void loop() {
 
 double getInput() {
   
-  double mVin = analogRead(MIC_IN)*4.9; // TODO: why is this 4.9? maybe Adam knows
+  double mVin = analogRead(MIC_IN);
+  Serial.print("mVin: ");
+  Serial.println(mVin);
   
-  if (mVin <= 0)
+  if (mVin <= 0) {
     Serial.println("Invalid read!!");
     Serial.print(mVin);
-  // Serial.print("... mVin - Voff: ");
-  // Serial.println(mVin);
+  }
   double dB = (20*log10(mVin/(S_total)));
 //  dB = 100;
   return dB;
