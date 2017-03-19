@@ -26,7 +26,6 @@ int vinPrev = 10; // DEBUG VARIABLE (for input simulation)
 const double p0 = 0.00002; // Reference Pressure
 const double sensitivity = 1000 * pow(10,(-53/20)); //in mV/Pa - convert the sensitivity in dBV/Pa to mV/Pa
 const double A_filt = 0.502; // A-filter gain
-//const double R1 = 9890; // Ohms
 const double R1 = 4658; // Ohms
 //const double R2 = 179500; //Ohms
 const double R2 = 98600; //Ohms
