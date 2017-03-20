@@ -1,7 +1,7 @@
 #define LEFT_MIC_IN 15 // Mic in Pin
-#define RIGHT_MIC_IN 9999 // Mic in Pin TODO dschwarz
+#define RIGHT_MIC_IN 16 // Mic in Pin TODO dschwarz
 // Output Pins 
-#define LEFT_1 1
+#define LEFT_1 1 // purple wire
 #define LEFT_2 2
 #define RIGHT_1 3
 #define RIGHT_2 4
@@ -13,6 +13,7 @@ const int LOWER_THRESHOLD = 75; // db, when to open
 const int MAX_EXPOSURE = 85; // dB, Maximum daily exposure
 // these must be minimum 15dB apart (or based on the actual attenuation of the device) If they're too close, the device will be stuck in an open/shut loop
 const double vref = 1; // reference votage (for dB calculation)
+const int DEACTIVATION_DELAY = 400; // After the device closes, time in millis before turning off driver. This is intentionally high for the demo, since battery life is not too much of an issue, but we really need to be sure the device is closed
 
 
 struct EarData {
@@ -26,7 +27,8 @@ struct EarData {
   int storedPastDB[STORED_PAST_DB];
   int currentIndex = 0; // the current record to write to
   int numRecords = 0; // the number of records. Values above STORED_PAST_DB are meaningless
-  bool isClosed = false; // true if the device has been closed more recently than it has been opened (doesn't gaurantee the plug is sealed yet though)
+  bool isClosed = true; // true if the device has been closed more recently than it has been opened (doesn't gaurantee the plug is sealed yet though)
+  bool isDeactivated = true; 
   
 } leftEar, rightEar;
 
@@ -63,6 +65,14 @@ void setup() {
   Serial.print("Initializing with time stamp: ");
   Serial.println(leftEar.lastResetTime);
 
+  pinMode(LEFT_MIC_IN, INPUT);
+  pinMode(RIGHT_MIC_IN, INPUT);
+  
+  pinMode(LEFT_1, OUTPUT);
+  pinMode(LEFT_2, OUTPUT);
+  pinMode(RIGHT_1, OUTPUT);
+  pinMode(RIGHT_2, OUTPUT);
+
   leftEar.micPin = LEFT_MIC_IN;
   leftEar.output1 = LEFT_1;
   leftEar.output2 = LEFT_2;
@@ -72,8 +82,10 @@ void setup() {
   rightEar.output2 = RIGHT_2;  
 
   Serial.println("## BEGINNING TEST ##");
-  testOutput(&leftEar);
+  //openDevice(&leftEar);
+  
   testOutput(&rightEar);
+  testOutput(&leftEar);
 }
 
 void loop() {
@@ -97,7 +109,7 @@ void loop() {
 
 }
 
-void controlEar(struct EarData* earData) {
+void controlEar(struct EarData* earData) {  
   double Vin = getInput(earData->micPin);
   double dBspl = V_to_dBspl(Vin);
   int currentTime = millis();
@@ -116,8 +128,8 @@ void controlEar(struct EarData* earData) {
       closeDevice(earData);
  } else if (earData->isClosed && shouldOpen(earData)) {
       openDevice(earData);
- } else if (earData->isClosed && currentTime - earData->timeLastClosed > 100) {
-  // if device closed 100ms ago, turn off driver
+ } else if (!earData->isDeactivated && earData->isClosed && currentTime - earData->timeLastClosed > DEACTIVATION_DELAY) {
+  // if device closed 200ms ago, turn off driver to save power
   deactivateDriver(earData);
  }
 }
@@ -149,8 +161,9 @@ void recordDB(double dB, int currentTime, EarData* earData) {
   }
 
   // If we've exceeded the window time frame
-  // 
   if (elapsedTime >= WINDOW) {
+    Serial.print("Stats for ear with mic: ");
+    Serial.println(earData->micPin);
     Serial.print("Max dB: ");
     Serial.println(earData->currentMaxDB);
     Serial.print("Closed: ");
@@ -217,9 +230,12 @@ bool shouldOpen(EarData* earData) {
 
 void openDevice(EarData* earData) {
   Serial.print("Opening device\n");
+  Serial.println(earData->output1);
+  Serial.println(earData->output2);
   digitalWrite(earData->output1, HIGH);
   digitalWrite(earData->output2, LOW);
   earData->isClosed = false;
+  earData->isDeactivated = false;
 }
 
 void closeDevice(EarData* earData) {
@@ -227,6 +243,7 @@ void closeDevice(EarData* earData) {
   digitalWrite(earData->output1, LOW);
   digitalWrite(earData->output2, HIGH);
   earData->isClosed = true;
+  earData->isDeactivated = false;
   earData->timeLastClosed = millis();
 }
 
@@ -234,6 +251,7 @@ void deactivateDriver(EarData* earData) {
   Serial.print("Deactivating driver\n");
   digitalWrite(earData->output1, LOW);
   digitalWrite(earData->output2, LOW);
+  earData->isDeactivated = true;
 }
 
 // Randomly varies the input signal
@@ -249,20 +267,20 @@ double getTestInput() {
 // Steps through all output options
 void testOutput(EarData* earData){
     Serial.println("Off");
-    openDevice(earData);
-    delay(500);
+    deactivateDriver(earData);
+    delay(1000);
 
     Serial.println("FWD");
-    closeDevice(earData);
-    delay(500);
-
-    Serial.println("Off");
     openDevice(earData);
-    delay(500);
+    delay(2000);
 
     Serial.println("BACK");
     closeDevice(earData);
-    delay(500);
+    delay(2000);
+
+    Serial.println("Off");
+    deactivateDriver(earData);
+    delay(2000);
 }
 
 int pseudoGaussian(int n, int range) {
