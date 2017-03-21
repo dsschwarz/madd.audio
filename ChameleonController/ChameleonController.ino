@@ -5,6 +5,8 @@
 #define LEFT_2 2
 #define RIGHT_1 3
 #define RIGHT_2 4
+//#define DEMO_PIN_OPEN 5
+//#define DEMO_PIN_CLOSE 6
 
 const int WINDOW = 500; // length of envelope window time in millis
 const int STORED_PAST_DB = 10; // The number of records to store (overwrites oldest record). This gives us a 5s memory
@@ -72,6 +74,9 @@ void setup() {
   pinMode(LEFT_2, OUTPUT);
   pinMode(RIGHT_1, OUTPUT);
   pinMode(RIGHT_2, OUTPUT);
+  
+//  pinMode(DEMO_PIN_OPEN,INPUT_PULLUP);
+//  pinMode(DEMO_PIN_CLOSE,INPUT_PULLUP);
 
   leftEar.micPin = LEFT_MIC_IN;
   leftEar.output1 = LEFT_1;
@@ -90,6 +95,24 @@ void setup() {
 
 void loop() {
   int currentTime = millis();
+
+//  if (digitalRead(DEMO_PIN_OPEN) == LOW) {
+//    Serial.println("## OVERRIDE open begin ##");
+//    while (digitalRead(DEMO_PIN_OPEN) == LOW) {
+//      openDevice(&rightEar);
+//      openDevice(&leftEar);
+//    }
+//    Serial.println("## OVERRIDE open end ##");
+//  }
+//
+//  if (digitalRead(DEMO_PIN_CLOSE) == LOW) {
+//    Serial.println("## OVERRIDE close begin ##");
+//    while (digitalRead(DEMO_PIN_CLOSE) == LOW) {
+//      closeDevice(&rightEar);
+//      closeDevice(&leftEar);
+//    }
+//    Serial.println("## OVERRIDE close end ##");
+//  }
   
   controlEar(&leftEar);
   controlEar(&rightEar);
@@ -230,8 +253,6 @@ bool shouldOpen(EarData* earData) {
 
 void openDevice(EarData* earData) {
   Serial.print("Opening device\n");
-  Serial.println(earData->output1);
-  Serial.println(earData->output2);
   digitalWrite(earData->output1, HIGH);
   digitalWrite(earData->output2, LOW);
   earData->isClosed = false;
