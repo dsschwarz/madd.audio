@@ -1,5 +1,5 @@
-#define LEFT_1 1
-#define LEFT_2 2
+#define LEFT_1 2
+#define LEFT_2 3
 
 void setup() {
   // put your setup code here, to run once:

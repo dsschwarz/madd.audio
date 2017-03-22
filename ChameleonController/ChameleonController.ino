@@ -1,10 +1,10 @@
 #define LEFT_MIC_IN 15 // Mic in Pin
 #define RIGHT_MIC_IN 16 // Mic in Pin TODO dschwarz
 // Output Pins 
-#define LEFT_1 1 // purple wire
-#define LEFT_2 2
-#define RIGHT_1 3
-#define RIGHT_2 4
+#define LEFT_1 0
+#define LEFT_2 1
+#define RIGHT_1 2
+#define RIGHT_2 3
 //#define DEMO_PIN_OPEN 5
 //#define DEMO_PIN_CLOSE 6
 
