@@ -253,16 +253,16 @@ bool shouldOpen(EarData* earData) {
 
 void openDevice(EarData* earData) {
   Serial.print("Opening device\n");
-  digitalWrite(earData->output1, HIGH);
-  digitalWrite(earData->output2, LOW);
+  digitalWrite(earData->output1, LOW);
+  digitalWrite(earData->output2, HIGH);
   earData->isClosed = false;
   earData->isDeactivated = false;
 }
 
 void closeDevice(EarData* earData) {
   Serial.print("Closing device\n");
-  digitalWrite(earData->output1, LOW);
-  digitalWrite(earData->output2, HIGH);
+  digitalWrite(earData->output1, HIGH);
+  digitalWrite(earData->output2, LOW);
   earData->isClosed = true;
   earData->isDeactivated = false;
   earData->timeLastClosed = millis();

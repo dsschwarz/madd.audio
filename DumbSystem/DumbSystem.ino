@@ -1,6 +1,8 @@
 #define MIC_IN 15
-#define LEFT_1 1
-#define LEFT_2 2
+#define LEFT_1 0
+#define LEFT_2 1
+#define RIGHT_1 2
+#define RIGHT_2 3
 
 void setup() {
   // put your setup code here, to run once:
@@ -8,20 +10,19 @@ void setup() {
   pinMode(MIC_IN, INPUT);
   pinMode(LEFT_1, OUTPUT);
   pinMode(LEFT_2, OUTPUT);
+  pinMode(RIGHT_1, OUTPUT);
+  pinMode(RIGHT_2, OUTPUT);
+  pinMode(4, OUTPUT);
+  
 } 
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  double  in = analogRead(MIC_IN);
-  Serial.println(in);
-
-  if (in > 50){
-      digitalWrite(LEFT_1,HIGH);
-      digitalWrite(LEFT_2,LOW);
-  } else {
+//Serial.println("Opening");
+//    digitalWrite(LEFT_1,HIGH);
+//    digitalWrite(LEFT_2, LOW);
     digitalWrite(LEFT_1,LOW);
-    digitalWrite(LEFT_2,HIGH);
-  }
-
-  delay(500);
+    digitalWrite(LEFT_2, HIGH);
+    digitalWrite(RIGHT_1,LOW);
+    digitalWrite(RIGHT_2, HIGH);
+  delay(5000);
 }
