@@ -153,7 +153,7 @@ void controlEar(struct EarData* earData) {
       openDevice(earData);
  } else if (!earData->isDeactivated && earData->isClosed && currentTime - earData->timeLastClosed > DEACTIVATION_DELAY) {
   // if device closed 200ms ago, turn off driver to save power
-  deactivateDriver(earData);
+//  deactivateDriver(earData);
  }
 }
 
