@@ -165,7 +165,7 @@ void controlEar(struct EarData* earData) {
 }
 
 double getInput(int pin) {
-  double mVin = analogRead(pin);
+  double mVin = analogRead(pin) * 4.9; // multiply by 4.9 to get milivolts
   if (mVin < 0) {
     Serial.print("Invalid read!!\n");
   }
