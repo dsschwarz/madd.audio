@@ -18,11 +18,11 @@ void loop() {
 //Serial.println("Opening");
 //    digitalWrite(LEFT_1,HIGH);
 //    digitalWrite(LEFT_2, LOW);
-    digitalWrite(LEFT_1,LOW);
-    digitalWrite(LEFT_2, HIGH);
-    digitalWrite(RIGHT_1,LOW);
-    digitalWrite(RIGHT_2, HIGH);
-  delay(5000);
+//    digitalWrite(LEFT_1,LOW);
+//    digitalWrite(LEFT_2, HIGH);
+//    digitalWrite(RIGHT_1,LOW);
+//    digitalWrite(RIGHT_2, HIGH);
+//  delay(5000);
     digitalWrite(LEFT_1,HIGH);
     digitalWrite(LEFT_2, LOW);
     digitalWrite(RIGHT_1,HIGH);

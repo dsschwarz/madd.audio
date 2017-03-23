@@ -53,6 +53,14 @@ const double R2 = 98600; //Ohms
 const double G = 1 + R2/R1; // Pre-amp gain
 const double S_total = p0*sens*A_filt*2*G; //Overall Gain
 
+// Calibrate Empirically
+//const double dBA_ref = 90.0;
+//const double FS = 2963.0; // Measured mVin to 90dBin
+//const double dBFS = 20*log10(2963/5000); // dBFS at 90dBSPL
+
+// just picking a number now
+const double scale = 1/3000.0; //p0/(pow(10,(dBFS/20))) * pow(10,(dBA_ref/20));
+
 
 // for testing
 int startTime;
@@ -174,7 +182,12 @@ double getInput(int pin) {
 }
 
 double V_to_dBspl(double vin) {
-    return (20*log10(vin/(S_total)));
+    // return (20*log10(vin/(S_total)));
+//    Serial.print("vin: ");
+//    Serial.println(vin);
+//    Serial.print("dBSPL: ");
+//    Serial.println(20*log10(vin*scale/p0));
+    return 20*log10(vin*scale/p0);
 }
 
 void recordDB(double dB, int currentTime, EarData* earData) {
