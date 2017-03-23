@@ -1,5 +1,5 @@
 #define LEFT_MIC_IN 15 // Mic in Pin
-#define RIGHT_MIC_IN 16 // Mic in Pin TODO dschwarz
+#define RIGHT_MIC_IN 15 // Mic in Pin TODO dschwarz
 // Output Pins 
 #define LEFT_1 0
 #define LEFT_2 1
@@ -23,7 +23,7 @@ struct EarData {
   int output1;
   int output2;
   
-  int timeLastClosed = 0; // time in millis when the device was last closed. After 100ms, the driver should be turned off
+  int timeLastOpened = 0; // time in millis when the device was last closed. After 100ms, the driver should be turned off
   int lastResetTime = 0; // time in millis when WINDOW started
   double currentMaxDB = 0; // NOTE: this could also be stored in the array. Keeping it separate for now to be explicit
   int storedPastDB[STORED_PAST_DB];
@@ -64,6 +64,8 @@ void setup() {
   Serial.begin(9600);
   leftEar.lastResetTime = millis();
   rightEar.lastResetTime = millis();
+  leftEar.timeLastOpened = millis();
+  rightEar.timeLastOpened = millis();
   Serial.print("Initializing with time stamp: ");
   Serial.println(leftEar.lastResetTime);
 
@@ -89,8 +91,8 @@ void setup() {
   Serial.println("## BEGINNING TEST ##");
   //openDevice(&leftEar);
   
-  testOutput(&rightEar);
-  testOutput(&leftEar);
+//  testOutput(&rightEar);
+//  testOutput(&leftEar);
 }
 
 void loop() {
@@ -137,6 +139,10 @@ void controlEar(struct EarData* earData) {
   double dBspl = V_to_dBspl(Vin);
   int currentTime = millis();
 
+  if (currentTime - earData->timeLastOpened < 1000) {
+    dBspl = 10;
+  }
+
   // Logs the max output over a window
   recordDB(dBspl, currentTime, earData);
 
@@ -151,10 +157,11 @@ void controlEar(struct EarData* earData) {
       closeDevice(earData);
  } else if (earData->isClosed && shouldOpen(earData)) {
       openDevice(earData);
- } else if (!earData->isDeactivated && earData->isClosed && currentTime - earData->timeLastClosed > DEACTIVATION_DELAY) {
+ }
+ //else if (!earData->isDeactivated && earData->isClosed && currentTime - earData->timeLastClosed > DEACTIVATION_DELAY) {
   // if device closed 200ms ago, turn off driver to save power
 //  deactivateDriver(earData);
- }
+// }
 }
 
 double getInput(int pin) {
@@ -257,6 +264,7 @@ void openDevice(EarData* earData) {
   digitalWrite(earData->output2, HIGH);
   earData->isClosed = false;
   earData->isDeactivated = false;
+  earData->timeLastOpened = millis();
 }
 
 void closeDevice(EarData* earData) {
@@ -265,7 +273,6 @@ void closeDevice(EarData* earData) {
   digitalWrite(earData->output2, LOW);
   earData->isClosed = true;
   earData->isDeactivated = false;
-  earData->timeLastClosed = millis();
 }
 
 void deactivateDriver(EarData* earData) {
